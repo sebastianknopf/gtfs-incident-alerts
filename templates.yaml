@@ -1,0 +1,26 @@
+templates:
+  - name: 'test-template'
+    codes:
+      - 108
+    delay_min: 300
+    delay_max: 9999
+    cause: OTHER_CAUSE
+    effect: SIGNIFICANT_DELAYS
+    url:
+      de: https://example.dev/alert/de/${id}
+    header:
+      de: |
+        Erhöhtes Verkehrsaufkommen
+    description:
+      de: |
+        Erhöhtes Verkehrsaufkommen zwischen ${startLocationName} und ${endLocationName}. 
+        % if len(affectedLineNames) == 1:
+        Betroffen ist die Linie ${affectedLineNames[0]}. 
+        % else:
+        Betroffen sind die Linien 
+        % for l in affectedLineNames[:-1]:
+        ${l}${' ' if loop.last else ', '}
+        % endfor
+        und ${affectedLineNames[-1]}. 
+        % endif
+        Es kann zu erheblichen Verspätungen kommen.

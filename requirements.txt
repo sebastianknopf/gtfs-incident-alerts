@@ -1,0 +1,8 @@
+click
+gql[httpx]
+gtfs-realtime-bindings
+mako
+polyline
+pyyaml
+requests
+shapely
