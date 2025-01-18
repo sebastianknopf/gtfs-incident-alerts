@@ -10,6 +10,8 @@ from google.transit import gtfs_realtime_pb2
 from google.protobuf.json_format import ParseDict
 from mako.template import Template
 from shapely import LineString
+from shapely.ops import transform
+from pyproj import CRS, Transformer
 
 from .otpclient import OtpClient
 
@@ -42,17 +44,19 @@ class OtpGtfsMatcher:
         for incident in geojson['features']:
             if self._any_template_available(incident):
 
+                if incident['geometry']['type'] == 'LineString':
+                    incident_shape = LineString(incident['geometry']['coordinates'])
+ 
+                incident_shape = transform(Transformer.from_crs(CRS('EPSG:4326'), CRS('EPSG:3857'), always_xy=True).transform, incident_shape)
+
                 affected_routes = dict()
-                affected_data = False
 
                 for pattern in otp_patterns:
-                    if self._test_pattern_match(pattern, incident):
-                        affected_data = True
-
+                    if self._test_pattern_match(pattern, incident_shape):
                         if pattern['route']['gtfsId'] not in affected_routes.keys():
                             affected_routes[pattern['route']['gtfsId']] = pattern['route']
 
-                if affected_data:
+                if len(affected_routes) > 0:
                     for template in self._templates:
                         if self._template_available(template, incident):
                             template_data = {
@@ -97,18 +101,19 @@ class OtpGtfsMatcher:
         
         return True
     
-    def _test_pattern_match(self, pattern: dict, incident: dict) -> bool:
+    def _test_pattern_match(self, pattern: dict, incident_shape: any) -> bool:
         pattern_coordinates = polyline.decode(
             pattern['patternGeometry']['points']
         )
 
         pattern_shape = LineString([c[::-1] for c in pattern_coordinates])
+        pattern_shape = transform(Transformer.from_crs(CRS('EPSG:4326'), CRS('EPSG:3857'), always_xy=True).transform, pattern_shape)
         
-        if incident['geometry']['type'] == 'LineString':
-            incident_shape = LineString(incident['geometry']['coordinates'])
+        if type(incident_shape) == LineString:
+            incident_shape = incident_shape.buffer(10.0)
+            intersection = pattern_shape.intersection(incident_shape)
 
-            distance = pattern_shape.distance(incident_shape)
-            if distance == 0.0:
+            if intersection.length >= 30.0:
                 return True
         
         return False

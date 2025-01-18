@@ -3,6 +3,7 @@ gql[httpx]
 gtfs-realtime-bindings
 mako
 polyline
+pyproj
 pyyaml
 requests
 shapely
