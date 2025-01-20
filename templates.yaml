@@ -1,19 +1,124 @@
 templates:
-  - name: 'test-template'
+  - name: 'accident-template'
     conditions:
-      - code: 100
+      - code: 201
+        or:
+          - 202
+          - 203
+          - 204
+        delay: 300
+    cause: ACCIDENT
+    effect: SIGNIFICANT_DELAYS
+    url:
+      de: https://example.dev/alert/de/${id}
+    header:
+      de: |
+        Verkehrsunfall zwischen ${startLocationName} und ${endLocationName}
+    description:
+      de: |
+        Verkehrsunfall zwischen ${startLocationName} und ${endLocationName}. 
+        % if len(affectedLines) == 1:
+        Betroffen ist die Linie ${affectedLines[0]['shortName']}. 
+        % else:
+        Betroffen sind die Linien 
+        % for l in affectedLines[:-1]:
+        ${l['shortName']}${' ' if loop.last else ', '}
+        % endfor
+        und ${affectedLines[-1]['shortName']}. 
+        % endif
+        Es kann zu Verspätungen und einzelnen Fahrtausfällen kommen.
+  - name: 'demonstration-template'
+    conditions:
+      - code: 1513
+        or:
+          - 1567
+          - 1568
+          - 1569
+          - 1570
+        delay: 300
+    cause: DEMONSTRATION
+    effect: SIGNIFICANT_DELAYS
+    url:
+      de: https://example.dev/alert/de/${id}
+    header:
+      de: |
+        Demonstration zwischen ${startLocationName} und ${endLocationName}
+    description:
+      de: |
+        Demonstration zwischen ${startLocationName} und ${endLocationName}. 
+        % if len(affectedLines) == 1:
+        Betroffen ist die Linie ${affectedLines[0]['shortName']}. 
+        % else:
+        Betroffen sind die Linien 
+        % for l in affectedLines[:-1]:
+        ${l['shortName']}${' ' if loop.last else ', '}
+        % endfor
+        und ${affectedLines[-1]['shortName']}. 
+        % endif
+        Es kann zu Verspätungen und einzelnen Fahrtausfällen kommen.
+  - name: 'fallen-trees-template'
+    conditions:
+      - code: 905
+        or:
+          - 906
+        delay: 300
+    cause: WEATHER
+    effect: SIGNIFICANT_DELAYS
+    url:
+      de: https://example.dev/alert/de/${id}
+    header:
+      de: |
+        Umgestürzte Bäume zwischen ${startLocationName} und ${endLocationName}
+    description:
+      de: |
+        Umgestürzte Bäume zwischen ${startLocationName} und ${endLocationName}. 
+        % if len(affectedLines) == 1:
+        Betroffen ist die Linie ${affectedLines[0]['shortName']}. 
+        % else:
+        Betroffen sind die Linien 
+        % for l in affectedLines[:-1]:
+        ${l['shortName']}${' ' if loop.last else ', '}
+        % endfor
+        und ${affectedLines[-1]['shortName']}. 
+        % endif
+        Es kann zu erheblichen Verspätungen und einzelnen Fahrtausfällen kommen.
+  - name: 'heavier-traffic-template'
+    conditions:
+      - code: 101
         or:
           - 101
           - 102
+          - 103
+          - 104
+          - 105
+          - 106
+          - 107
           - 108
-        delay: 100
+          - 109
+          - 111
+          - 112
+          - 113
+          - 114
+          - 115
+          - 116
+          - 117
+          - 118
+          - 119
+          - 120
+          - 122
+          - 129
+          - 131
+          - 136
+          - 142
+          - 143
+        delay: 300
     cause: OTHER_CAUSE
     effect: SIGNIFICANT_DELAYS
     url:
       de: https://example.dev/alert/de/${id}
     header:
       de: |
-        Erhöhtes Verkehrsaufkommen
+        Erhöhtes Verkehrsaufkommen zwischen ${startLocationName} und ${endLocationName}
     description:
       de: |
         Erhöhtes Verkehrsaufkommen zwischen ${startLocationName} und ${endLocationName}. 
@@ -26,4 +131,4 @@ templates:
         % endfor
         und ${affectedLines[-1]['shortName']}. 
         % endif
-        Es kann zu erheblichen Verspätungen kommen.
+        Es kann zu Verspätungen kommen.

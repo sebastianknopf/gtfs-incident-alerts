@@ -3,8 +3,8 @@ import logging
 import polyline
 import re
 import time
+import uuid
 import yaml
-import os
 
 from datetime import datetime
 from google.transit import gtfs_realtime_pb2
@@ -76,6 +76,8 @@ class OtpGtfsMatcher:
 
                             logging.info(str(alert_entity))
 
+                        break
+
         logging.info(f"found {len(feed_message['entity'])} incidents total")
         if output_filename.endswith('.json'):
             with open(output_filename, 'wb') as output_file:
@@ -109,7 +111,7 @@ class OtpGtfsMatcher:
                 for or_code in template_condition['or']:
                     available = available or or_code in incident_codes 
         
-            if 'delay' in incident['properties'] and 'delay' in template_condition and incident['properties']['delay'] < template_condition['delay']:
+            if 'delay' in incident['properties'] and 'delay' in template_condition and incident['properties']['delay'] is not None and incident['properties']['delay'] < template_condition['delay']:
                 available = False
         
         return available
@@ -150,7 +152,9 @@ class OtpGtfsMatcher:
         return translated_string
     
     def _create_service_alert(self, template: dict, incident: dict, **data) -> tuple:
-        alert_id = incident['properties']['id']
+        
+        root_uuid = uuid.UUID('0715e0ca-0427-49ce-b3c8-5f83b400d00b')
+        alert_id = str(uuid.uuid5(namespace=root_uuid, name=incident['properties']['id']))
         
         alert_entity = {
             'cause': template['cause'],
