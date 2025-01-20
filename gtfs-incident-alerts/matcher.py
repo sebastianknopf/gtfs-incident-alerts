@@ -75,6 +75,7 @@ class OtpGtfsMatcher:
 
                             logging.info(str(alert_entity))
 
+        logging.info(f"found {len(feed_message['entity'])} incidents total")
         with open(output_filename, 'wb') as output_file:
             pbf_object = gtfs_realtime_pb2.FeedMessage()
             ParseDict(feed_message, pbf_object)
@@ -93,13 +94,22 @@ class OtpGtfsMatcher:
     
     def _template_available(self, template: dict, incident: dict) -> bool:
         incident_codes = [e['code'] for e in incident['properties']['events']]
-        if not all(c in incident_codes for c in template['codes']):
-            return False
+
+        available = False
+        for template_condition in template['conditions']:
+            if template_condition['code'] in incident_codes:
+                available = True
+            else: 
+                return False
+            
+            if 'or' in template_condition:
+                for or_code in template['or']:
+                    available = available or or_code in incident_codes 
         
-        if 'delay' in incident['properties'] and (incident['properties']['delay'] < template['delay_min'] or incident['properties']['delay'] > template['delay_max']):
-            return False
+            if 'delay' in incident['properties'] and 'delay' in template_condition and incident['properties']['delay'] < template_condition['delay']:
+                available = False
         
-        return True
+        return available
     
     def _test_pattern_match(self, pattern: dict, incident_shape: any) -> bool:
         pattern_coordinates = polyline.decode(

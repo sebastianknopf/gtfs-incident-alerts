@@ -1,9 +1,11 @@
 templates:
   - name: 'test-template'
-    codes:
-      - 108
-    delay_min: 300
-    delay_max: 9999
+    conditions:
+      - code: 100
+        or:
+          - 101
+          - 102
+        delay: 300
     cause: OTHER_CAUSE
     effect: SIGNIFICANT_DELAYS
     url:

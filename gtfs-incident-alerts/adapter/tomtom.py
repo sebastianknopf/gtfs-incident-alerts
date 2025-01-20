@@ -43,7 +43,7 @@ class Adapter:
         request_fields = self._api_query.replace('\n', ' ').replace('\r', '').replace('\t', '').replace(' ', '')
         request_url = f"https://api.tomtom.com/traffic/services/{self._api_version}/incidentDetails?key={self._api_key}&bbox={bbox}&language={self._api_lang}&fields={request_fields}&categoryFilter={self._api_categories}"
 
-        logging.info(request_url)
+        logging.info(f"HTTP Request: GET {request_url}")
 
         response = requests.get(request_url)
         if response.status_code == 200:
