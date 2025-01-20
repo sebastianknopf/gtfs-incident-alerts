@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "gtfs-incident-alerts match (Debug)",
+            "name": "match (debug)",
             "type": "debugpy",
             "request": "launch",
             "module": "gtfs-incident-alerts",

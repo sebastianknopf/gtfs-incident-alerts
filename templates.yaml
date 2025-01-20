@@ -16,13 +16,13 @@ templates:
     description:
       de: |
         Erhöhtes Verkehrsaufkommen zwischen ${startLocationName} und ${endLocationName}. 
-        % if len(affectedLineNames) == 1:
-        Betroffen ist die Linie ${affectedLineNames[0]}. 
+        % if len(affectedLines) == 1:
+        Betroffen ist die Linie ${affectedLines[0]['shortName']}. 
         % else:
         Betroffen sind die Linien 
-        % for l in affectedLineNames[:-1]:
-        ${l}${' ' if loop.last else ', '}
+        % for l in affectedLines[:-1]:
+        ${l['shortName']}${' ' if loop.last else ', '}
         % endfor
-        und ${affectedLineNames[-1]}. 
+        und ${affectedLines[-1]['shortName']}. 
         % endif
         Es kann zu erheblichen Verspätungen kommen.

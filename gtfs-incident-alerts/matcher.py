@@ -64,8 +64,7 @@ class OtpGtfsMatcher:
                             template_data = {
                                 'startLocationName': incident['properties']['from'],
                                 'endLocationName': incident['properties']['to'],
-                                'affectedLineIds': list(affected_routes.keys()),
-                                'affectedLineNames': self.__t_natural_sort([r['shortName'] for r in affected_routes.values()]),
+                                'affectedLines': self._natural_sort(list(affected_routes.values()), 'shortName')
                             }
                             
                             alert_id, alert_entity = self._create_service_alert(template, incident, **template_data)
@@ -139,7 +138,8 @@ class OtpGtfsMatcher:
                     'language': lang,
                     'text': tmpl.render(
                         **data, 
-                        nsort=self.__t_natural_sort
+                        natural_sort=self.__t_natural_sort,
+                        extract_property=self.__t_extract_property
                     ).replace('\n', '')
                 })
 
@@ -159,8 +159,19 @@ class OtpGtfsMatcher:
 
         return alert_id, alert_entity
 
-    def __t_natural_sort(self, l):    
+    def _natural_sort(self, l, property=None):
         convert = lambda text: int(text) if text.isdigit() else text.lower()
-        alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+        if property is not None:
+            alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key[property])]
+        else:
+            alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
 
         return sorted(l, key=alphanum_key)
+
+    def __t_natural_sort(self, l):    
+        return self._natural_sort(l, None)
+    
+    def __t_extract_property(self, l, property):
+        result = [x[property] for x in l]
+
+        return result
