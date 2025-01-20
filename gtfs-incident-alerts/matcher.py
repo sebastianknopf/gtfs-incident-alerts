@@ -4,6 +4,7 @@ import polyline
 import re
 import time
 import yaml
+import os
 
 from datetime import datetime
 from google.transit import gtfs_realtime_pb2
@@ -25,6 +26,7 @@ class OtpGtfsMatcher:
             self._templates = templates['templates']
 
     def match(self, input_filename, output_filename):
+        
         with open(input_filename, 'r') as geojson_file:
             geojson = json.loads(geojson_file.read())
 
@@ -63,7 +65,7 @@ class OtpGtfsMatcher:
                                 'startLocationName': incident['properties']['from'],
                                 'endLocationName': incident['properties']['to'],
                                 'affectedLineIds': list(affected_routes.keys()),
-                                'affectedLineNames': self._natural_sort([r['shortName'] for r in affected_routes.values()])
+                                'affectedLineNames': self.__t_natural_sort([r['shortName'] for r in affected_routes.values()]),
                             }
                             
                             alert_id, alert_entity = self._create_service_alert(template, incident, **template_data)
@@ -99,11 +101,9 @@ class OtpGtfsMatcher:
         for template_condition in template['conditions']:
             if template_condition['code'] in incident_codes:
                 available = True
-            else: 
-                return False
             
             if 'or' in template_condition:
-                for or_code in template['or']:
+                for or_code in template_condition['or']:
                     available = available or or_code in incident_codes 
         
             if 'delay' in incident['properties'] and 'delay' in template_condition and incident['properties']['delay'] < template_condition['delay']:
@@ -118,7 +118,7 @@ class OtpGtfsMatcher:
 
         pattern_shape = LineString([c[::-1] for c in pattern_coordinates])
         pattern_shape = transform(Transformer.from_crs(CRS('EPSG:4326'), CRS('EPSG:3857'), always_xy=True).transform, pattern_shape)
-        
+
         if type(incident_shape) == LineString:
             incident_shape = incident_shape.buffer(10.0)
             intersection = pattern_shape.intersection(incident_shape)
@@ -137,7 +137,10 @@ class OtpGtfsMatcher:
                 tmpl = Template(text)
                 translated_string['translation'].append({
                     'language': lang,
-                    'text': tmpl.render(**data).replace('\n', '')
+                    'text': tmpl.render(
+                        **data, 
+                        nsort=self.__t_natural_sort
+                    ).replace('\n', '')
                 })
 
         return translated_string
@@ -156,7 +159,7 @@ class OtpGtfsMatcher:
 
         return alert_id, alert_entity
 
-    def _natural_sort(self, l):    
+    def __t_natural_sort(self, l):    
         convert = lambda text: int(text) if text.isdigit() else text.lower()
         alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
 
