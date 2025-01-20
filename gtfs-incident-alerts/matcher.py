@@ -157,6 +157,12 @@ class OtpGtfsMatcher:
             'effect': template['effect']
         }
 
+        alert_entity['informed_entity'] = list()
+        for line in data['affectedLines']:
+            alert_entity['informed_entity'].append({
+                'route_id': line['gtfsId']
+            })
+
         alert_entity['url'] = self._create_translated_string(template, 'url', **{'id': alert_id})
         alert_entity['header_text'] = self._create_translated_string(template, 'header', **data)
         alert_entity['description_text'] = self._create_translated_string(template, 'description', **data)

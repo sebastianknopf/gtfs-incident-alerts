@@ -5,6 +5,7 @@ templates:
         or:
           - 101
           - 102
+          - 108
         delay: 100
     cause: OTHER_CAUSE
     effect: SIGNIFICANT_DELAYS
