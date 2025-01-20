@@ -207,6 +207,7 @@ pip-selfcheck.json
 # Project Specific
 ./sampledata/*
 service-alerts.pbf
+service-alerts.json
 incidents.geojson
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,venv

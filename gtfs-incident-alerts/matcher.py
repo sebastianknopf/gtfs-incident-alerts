@@ -77,11 +77,15 @@ class OtpGtfsMatcher:
                             logging.info(str(alert_entity))
 
         logging.info(f"found {len(feed_message['entity'])} incidents total")
-        with open(output_filename, 'wb') as output_file:
-            pbf_object = gtfs_realtime_pb2.FeedMessage()
-            ParseDict(feed_message, pbf_object)
+        if output_filename.endswith('.json'):
+            with open(output_filename, 'wb') as output_file:
+                output_file.write(json.dumps(feed_message, indent=2, ensure_ascii=False).encode('utf-8'))
+        elif output_filename.endswith('.pbf'):
+            with open(output_filename, 'wb') as output_file:
+                pbf_object = gtfs_realtime_pb2.FeedMessage()
+                ParseDict(feed_message, pbf_object)
 
-            output_file.write(pbf_object.SerializeToString())
+                output_file.write(pbf_object.SerializeToString())
 
     def _any_template_available(self, incident: dict) -> bool:
         if incident['properties']['events'] is None:

@@ -9,7 +9,7 @@
             "type": "debugpy",
             "request": "launch",
             "module": "gtfs-incident-alerts",
-            "args": ["match", "-u", "https://otp.svprod01.app/otp/gtfs/v1",  "-i", "./incidents.geojson",  "-o",  "./service-alerts.pbf"]
+            "args": ["match", "-u", "https://otp.svprod01.app/otp/gtfs/v1",  "-i", "./incidents.geojson",  "-o",  "./service-alerts.json"]
         }
     ]
 }
