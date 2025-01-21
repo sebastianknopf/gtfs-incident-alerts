@@ -2,6 +2,7 @@ click
 gql[httpx]
 gtfs-realtime-bindings
 mako
+paho-mqtt
 polyline
 pyproj
 pyyaml

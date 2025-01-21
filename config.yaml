@@ -1,0 +1,10 @@
+app:
+  mqtt_enabled: false
+mqtt:
+  host: test.mosquitto.org
+  port: 1883
+  client: gtfs-incident-alerts-client
+  keepalive: 60
+  username: null
+  password: null
+  service_alerts_topic: realtime/sample/servicealerts/[alertId]

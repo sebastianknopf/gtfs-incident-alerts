@@ -205,7 +205,7 @@ pip-selfcheck.json
 .ionide
 
 # Project Specific
-./sampledata/*
+sampledata/*
 service-alerts.pbf
 service-alerts.json
 incidents.geojson

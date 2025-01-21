@@ -32,9 +32,10 @@ def fetch(output, source, bbox, key):
 @click.option('--input', '-i', help='Input GeoJSON file with incident data')
 @click.option('--templates', '-t', default='templates.yaml', help='YAML file containing text templates and their rules')
 @click.option('--output', '-o', help='Output protobuf file for generated service alerts')
-def match(url, input, templates, output):
+@click.option('--config', '-c', default=None, help='Configuration file for the application')
+def match(url, input, templates, output, config):
     
-    matcher = OtpGtfsMatcher(url, templates)
+    matcher = OtpGtfsMatcher(url, templates, config)
     matcher.match(input, output)
 
 if __name__ == '__main__':

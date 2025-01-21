@@ -14,16 +14,37 @@ from shapely import LineString
 from shapely.ops import transform
 from pyproj import CRS, Transformer
 
+from .mqtt import GtfsRealtimeServiceAlertPublisher
 from .otpclient import OtpClient
 
 class OtpGtfsMatcher:
 
-    def __init__(self, otp_url: str, template_filename: str):
+    def __init__(self, otp_url: str, template_filename: str, config_filename: str | None):
         self._otp_client = OtpClient(otp_url)
         
         with open(template_filename, 'r', encoding='utf-8') as template_file:
             templates = yaml.safe_load(template_file)
             self._templates = templates['templates']
+
+         # load config and set default values
+        if config_filename is not None:
+            with open(config_filename, 'r') as config_file:
+                self._config = yaml.safe_load(config_file)
+        else:
+            self._config = dict()
+            self._config['app'] = dict()
+            self._config['app']['mqtt_enabled'] = False
+
+            self._config['mqtt']['host'] = 'test.mosquitto.org'
+            self._config['mqtt']['port'] = 1883
+            self._config['mqtt']['client'] = 'gtfs-incident-alerts-client'
+            self._config['mqtt']['keepalive'] = 60
+            self._config['mqtt']['username'] = None
+            self._config['mqtt']['password'] = None
+            self._config['mqtt']['service_alerts_topic'] = 'realtime/sample/service-alerts/[alertId]'
+
+        # start MQTT client if required
+        self._mqtt_publisher = GtfsRealtimeServiceAlertPublisher(self._config)
 
     def match(self, input_filename, output_filename):
         
@@ -43,6 +64,11 @@ class OtpGtfsMatcher:
 
         feed_message['entity'] = list()
 
+        # start MQTT main loop for publishing data
+        if self._config['app']['mqtt_enabled']:
+            self._mqtt_publisher.start()
+
+        # iterate through all incidents found
         for incident in geojson['features']:
             if self._any_template_available(incident):
 
@@ -74,10 +100,20 @@ class OtpGtfsMatcher:
                                 'alert': alert_entity
                             })
 
+                            # publish to MQTT if required
+                            if self._config['app']['mqtt_enabled']:
+                                self._mqtt_publisher.publish(alert_id, alert_entity)
+
+                            # log for debugging purposes
                             logging.info(str(alert_entity))
 
-                        break
+                            break
 
+        # stop MQTT main loop
+        if self._config['app']['mqtt_enabled']:
+            self._mqtt_publisher.stop()
+
+        # write output file
         logging.info(f"found {len(feed_message['entity'])} incidents total")
         if output_filename.endswith('.json'):
             with open(output_filename, 'wb') as output_file:
