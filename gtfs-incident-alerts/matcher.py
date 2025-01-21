@@ -35,6 +35,7 @@ class OtpGtfsMatcher:
             self._config['app'] = dict()
             self._config['app']['mqtt_enabled'] = False
 
+            self._config['mqtt'] = dict()
             self._config['mqtt']['host'] = 'test.mosquitto.org'
             self._config['mqtt']['port'] = 1883
             self._config['mqtt']['client'] = 'gtfs-incident-alerts-client'

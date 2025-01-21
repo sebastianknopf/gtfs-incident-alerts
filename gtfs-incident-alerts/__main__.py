@@ -30,8 +30,8 @@ def fetch(output, source, bbox, key):
 @cli.command()
 @click.option('--url', '-u', default='', help='OpenTripPlanner GraphQL GTFS endpoint for requesting GTFS data')
 @click.option('--input', '-i', help='Input GeoJSON file with incident data')
+@click.option('--output', '-o', help='Output protobuf or JSON file for generated service alerts.')
 @click.option('--templates', '-t', default='templates.yaml', help='YAML file containing text templates and their rules')
-@click.option('--output', '-o', help='Output protobuf file for generated service alerts')
 @click.option('--config', '-c', default=None, help='Configuration file for the application')
 def match(url, input, templates, output, config):
     
