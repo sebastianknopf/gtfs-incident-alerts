@@ -7,18 +7,21 @@ from paho.mqtt import client
 
 class GtfsRealtimeServiceAlertPublisher:
 
-    def __init__(self, config):
-
-        # load config
-        self._config = config
+    def __init__(self, host, port, username, password, topic):
 
         # connecto to MQTT broker as defined in config
-        self._mqtt = client.Client(client.CallbackAPIVersion.VERSION2, protocol=client.MQTTv5, client_id=self._config['mqtt']['client'])
+        topic = topic.replace('+', '_')
+        topic = topic.replace('#', '_')
+        topic = topic.replace('$', '_')
+        
+        self._topic = topic
 
-        if self._config['mqtt']['username'] is not None and self._config['mqtt']['password'] is not None:
-            self._mqtt.username_pw_set(username=self._config['mqtt']['username'], password=self._config['mqtt']['password'])
+        self._mqtt = client.Client(client.CallbackAPIVersion.VERSION2, protocol=client.MQTTv5)
 
-        self._mqtt.connect(self._config['mqtt']['host'], self._config['mqtt']['port'])
+        if username is not None and password is not None:
+            self._mqtt.username_pw_set(username=username, password=password)
+
+        self._mqtt.connect(host, int(port))
 
     def start(self) -> None:
         self._mqtt.loop_start()
@@ -29,12 +32,8 @@ class GtfsRealtimeServiceAlertPublisher:
     def publish(self, alert_id: str, alert_entity: dict) -> None:
 
         # generate MQTT topic from placeholders
-        topic = self._config['mqtt']['service_alerts_topic']
-        topic = topic.replace('[alertId]', alert_id.replace('/', '_'))
-
-        topic = topic.replace('+', '_')
-        topic = topic.replace('#', '_')
-        topic = topic.replace('$', '_')
+        topic = self._topic
+        topic = topic.replace('[alertId]', alert_id)
 
         # generate feed message containing a single alert
         feed_message = dict()

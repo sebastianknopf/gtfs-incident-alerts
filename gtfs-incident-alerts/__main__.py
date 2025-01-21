@@ -30,13 +30,17 @@ def fetch(output, source, bbox, key):
 @cli.command()
 @click.option('--url', '-u', default='', help='OpenTripPlanner GraphQL GTFS endpoint for requesting GTFS data')
 @click.option('--input', '-i', help='Input GeoJSON file with incident data')
-@click.option('--output', '-o', help='Output protobuf or JSON file for generated service alerts.')
 @click.option('--templates', '-t', default='templates.yaml', help='YAML file containing text templates and their rules')
-@click.option('--config', '-c', default=None, help='Configuration file for the application')
-def match(url, input, templates, output, config):
+@click.option('--output', '-o', default=None, help='Output protobuf or JSON file for generated service alerts')
+@click.option('--mqtt', '-m', default=None, help='MQTT connection and topic URI')
+def match(url, input, templates, output, mqtt):
     
-    matcher = OtpGtfsMatcher(url, templates, config)
-    matcher.match(input, output)
+    if output is None and mqtt is None:
+        logging.error('either --output/-o or --mqtt/-m must be specified')
+        return
+
+    matcher = OtpGtfsMatcher(url, templates)
+    matcher.match(input, output, mqtt)
 
 if __name__ == '__main__':
     cli()

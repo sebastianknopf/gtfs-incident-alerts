@@ -13,63 +13,33 @@ from mako.template import Template
 from shapely import LineString
 from shapely.ops import transform
 from pyproj import CRS, Transformer
+from urllib.parse import urlparse
 
 from .mqtt import GtfsRealtimeServiceAlertPublisher
 from .otpclient import OtpClient
 
 class OtpGtfsMatcher:
 
-    def __init__(self, otp_url: str, template_filename: str, config_filename: str | None):
+    def __init__(self, otp_url: str, template_filename: str):
         self._otp_client = OtpClient(otp_url)
         
         with open(template_filename, 'r', encoding='utf-8') as template_file:
             templates = yaml.safe_load(template_file)
             self._templates = templates['templates']
 
-         # load config and set default values
-        if config_filename is not None:
-            with open(config_filename, 'r') as config_file:
-                self._config = yaml.safe_load(config_file)
-        else:
-            self._config = dict()
-            self._config['app'] = dict()
-            self._config['app']['mqtt_enabled'] = False
-
-            self._config['mqtt'] = dict()
-            self._config['mqtt']['host'] = 'test.mosquitto.org'
-            self._config['mqtt']['port'] = 1883
-            self._config['mqtt']['client'] = 'gtfs-incident-alerts-client'
-            self._config['mqtt']['keepalive'] = 60
-            self._config['mqtt']['username'] = None
-            self._config['mqtt']['password'] = None
-            self._config['mqtt']['service_alerts_topic'] = 'realtime/sample/service-alerts/[alertId]'
-
-        # start MQTT client if required
-        self._mqtt_publisher = GtfsRealtimeServiceAlertPublisher(self._config)
-
-    def match(self, input_filename, output_filename):
+    def match(self, input_filename, output_filename, mqtt_uri):
         
+        # load incident input GeoJSON file
         with open(input_filename, 'r') as geojson_file:
             geojson = json.loads(geojson_file.read())
 
+        # load active patterns for the current operation day
         otp_patterns = self._otp_client.load_active_pattern(
             datetime.now().strftime('%Y-%m-%d')
         )
 
-        feed_message = dict()
-        feed_message['header'] = {
-            'gtfs_realtime_version': '2.0',
-            'incrementality': 'FULL_DATASET',
-            'timestamp': int(time.time())
-        } 
-
-        feed_message['entity'] = list()
-
-        # start MQTT main loop for publishing data
-        if self._config['app']['mqtt_enabled']:
-            self._mqtt_publisher.start()
-
         # iterate through all incidents found
+        alerts = dict()
         for incident in geojson['features']:
             if self._any_template_available(incident):
 
@@ -78,13 +48,14 @@ class OtpGtfsMatcher:
  
                 incident_shape = transform(Transformer.from_crs(CRS('EPSG:4326'), CRS('EPSG:3857'), always_xy=True).transform, incident_shape)
 
+                # check for patterns matching this incident
                 affected_routes = dict()
-
                 for pattern in otp_patterns:
                     if self._test_pattern_match(pattern, incident_shape):
                         if pattern['route']['gtfsId'] not in affected_routes.keys():
                             affected_routes[pattern['route']['gtfsId']] = pattern['route']
 
+                # if there's at least one line affected ...
                 if len(affected_routes) > 0:
                     for template in self._templates:
                         if self._template_available(template, incident):
@@ -95,36 +66,70 @@ class OtpGtfsMatcher:
                             }
                             
                             alert_id, alert_entity = self._create_service_alert(template, incident, **template_data)
+                            alerts[alert_id] = alert_entity
 
-                            feed_message['entity'].append({
-                                'id': alert_id,
-                                'alert': alert_entity
-                            })
-
-                            # publish to MQTT if required
-                            if self._config['app']['mqtt_enabled']:
-                                self._mqtt_publisher.publish(alert_id, alert_entity)
-
-                            # log for debugging purposes
-                            logging.info(str(alert_entity))
-
+                            # first template has matched
+                            # do not create multiple alerts
+                            # for the same incident
                             break
 
-        # stop MQTT main loop
-        if self._config['app']['mqtt_enabled']:
-            self._mqtt_publisher.stop()
+        # create desired output
+        logging.info(f"found {len(alerts)} incidents total")
+        if mqtt_uri is not None:
+            logging.info("publishing to MQTT ...")
 
-        # write output file
-        logging.info(f"found {len(feed_message['entity'])} incidents total")
-        if output_filename.endswith('.json'):
-            with open(output_filename, 'wb') as output_file:
-                output_file.write(json.dumps(feed_message, indent=2, ensure_ascii=False).encode('utf-8'))
-        elif output_filename.endswith('.pbf'):
-            with open(output_filename, 'wb') as output_file:
-                pbf_object = gtfs_realtime_pb2.FeedMessage()
-                ParseDict(feed_message, pbf_object)
+            mqtt_uri = urlparse(mqtt_uri)
 
-                output_file.write(pbf_object.SerializeToString())
+            mqtt_params = mqtt_uri.netloc.split('@')
+            mqtt_topic = mqtt_uri.path
+
+            if len(mqtt_params) == 1:
+                mqtt_username, mqtt_password = None, None
+                mqtt_host, mqtt_port = mqtt_params[0].split(':')
+            elif len(mqtt_params) == 2:
+                mqtt_username, mqtt_password = mqtt_params[0].split(':')
+                mqtt_host, mqtt_port = mqtt_params[1].split(':')
+
+            mqtt_publisher = GtfsRealtimeServiceAlertPublisher(
+                host=mqtt_host,
+                port=mqtt_port,
+                username=mqtt_username,
+                password=mqtt_password,
+                topic=mqtt_topic
+            )
+
+            mqtt_publisher.start()
+
+            for alert_id, alert_entity in alerts.items():
+                mqtt_publisher.publish(alert_id, alert_entity)
+
+            mqtt_publisher.stop()
+        else:
+            logging.info("writing output file ...")
+
+            feed_message = dict()
+            feed_message['header'] = {
+                'gtfs_realtime_version': '2.0',
+                'incrementality': 'FULL_DATASET',
+                'timestamp': int(time.time())
+            } 
+
+            feed_message['entity'] = list()
+            for alert_id, alert_entity in alerts.items():
+                feed_message['entity'].append({
+                    'id': alert_id,
+                    'alert': alert_entity
+                })
+
+            if output_filename.endswith('.json'):
+                with open(output_filename, 'wb') as output_file:
+                    output_file.write(json.dumps(feed_message, indent=2, ensure_ascii=False).encode('utf-8'))
+            elif output_filename.endswith('.pbf'):
+                with open(output_filename, 'wb') as output_file:
+                    pbf_object = gtfs_realtime_pb2.FeedMessage()
+                    ParseDict(feed_message, pbf_object)
+
+                    output_file.write(pbf_object.SerializeToString())
 
     def _any_template_available(self, incident: dict) -> bool:
         if incident['properties']['events'] is None:
