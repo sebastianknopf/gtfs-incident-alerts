@@ -68,10 +68,6 @@ class OtpGtfsMatcher:
                             alert_id, alert_entity = self._create_service_alert(template, incident, **template_data)
                             alerts[alert_id] = alert_entity
 
-                            # log incident for debugging purposes
-                            logging.info('Alert ID: ' + alert_id)
-                            logging.info('Alert Data: ' + str(alert_entity))
-
                             # first template has matched
                             # do not create multiple alerts
                             # for the same incident
@@ -94,20 +90,9 @@ class OtpGtfsMatcher:
                 mqtt_username, mqtt_password = mqtt_params[0].split(':')
                 mqtt_host, mqtt_port = mqtt_params[1].split(':')
 
-            mqtt_publisher = GtfsRealtimeServiceAlertPublisher(
-                host=mqtt_host,
-                port=mqtt_port,
-                username=mqtt_username,
-                password=mqtt_password,
-                topic=mqtt_topic
-            )
+            with GtfsRealtimeServiceAlertPublisher(host=mqtt_host, port=mqtt_port, username=mqtt_username, password=mqtt_password, topic=mqtt_topic) as mqtt_publisher:
+                mqtt_publisher.publish(alerts)
 
-            mqtt_publisher.start()
-
-            for alert_id, alert_entity in alerts.items():
-                mqtt_publisher.publish(alert_id, alert_entity)
-
-            mqtt_publisher.stop()
         else:
             logging.info("writing output file ...")
 
@@ -124,6 +109,9 @@ class OtpGtfsMatcher:
                     'id': alert_id,
                     'alert': alert_entity
                 })
+
+                # log incident for debugging purposes
+                logging.info(f"{alert_entity}")
 
             if output_filename.endswith('.json'):
                 with open(output_filename, 'wb') as output_file:

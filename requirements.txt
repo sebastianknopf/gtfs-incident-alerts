@@ -1,3 +1,4 @@
+appdirs
 click
 gql[httpx]
 gtfs-realtime-bindings
