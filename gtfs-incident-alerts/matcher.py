@@ -171,10 +171,17 @@ class OtpGtfsMatcher:
         pattern_shape = transform(Transformer.from_crs(CRS('EPSG:4326'), CRS('EPSG:3857'), always_xy=True).transform, pattern_shape)
 
         if type(incident_shape) == LineString:
-            incident_shape = incident_shape.buffer(10.0)
+
+            # Note: Intersection length should be a minimum of 40m with buffer size of 5m to avoid 
+            # incident alerts for lines which are only crossing an incident, as they might not be affected.
+            # Be aware, that an intersection could happen in an angle of 90° (a normal crossing) but
+            # also can happen in an angle different than 90 degrees (e.g. a street located below or above another street).
+            # The buffer transforms the incident shape into a polygon which leads to a longer intersection at all!
+            
+            incident_shape = incident_shape.buffer(5.0)
             intersection = pattern_shape.intersection(incident_shape)
 
-            if intersection.length >= 30.0:
+            if intersection.length >= 40.0:
                 return True
         
         return False
