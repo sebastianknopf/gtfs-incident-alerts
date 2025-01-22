@@ -27,7 +27,7 @@ class OtpGtfsMatcher:
             templates = yaml.safe_load(template_file)
             self._templates = templates['templates']
 
-    def match(self, input_filename, output_filename, mqtt_uri):
+    def match(self, input_filename, output_filename, mqtt_uri, mqtt_expiration):
         
         # load incident input GeoJSON file
         with open(input_filename, 'r') as geojson_file:
@@ -90,7 +90,7 @@ class OtpGtfsMatcher:
                 mqtt_username, mqtt_password = mqtt_params[0].split(':')
                 mqtt_host, mqtt_port = mqtt_params[1].split(':')
 
-            with GtfsRealtimeServiceAlertPublisher(host=mqtt_host, port=mqtt_port, username=mqtt_username, password=mqtt_password, topic=mqtt_topic) as mqtt_publisher:
+            with GtfsRealtimeServiceAlertPublisher(host=mqtt_host, port=mqtt_port, username=mqtt_username, password=mqtt_password, topic=mqtt_topic, expiration=mqtt_expiration) as mqtt_publisher:
                 mqtt_publisher.publish(alerts)
 
         else:

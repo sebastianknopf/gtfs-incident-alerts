@@ -33,14 +33,15 @@ def fetch(output, source, bbox, key):
 @click.option('--templates', '-t', default='templates.yaml', help='YAML file containing text templates and their rules')
 @click.option('--output', '-o', default=None, help='Output protobuf or JSON file for generated service alerts')
 @click.option('--mqtt', '-m', default=None, help='MQTT connection and topic URI')
-def match(url, input, templates, output, mqtt):
+@click.option('--expiration', '-e', default=600, help='MQTT message expiration time. Only used in MQTT publishing')
+def match(url, input, templates, output, mqtt, expiration):
     
     if output is None and mqtt is None:
         logging.error('either --output/-o or --mqtt/-m must be specified')
         return
 
     matcher = OtpGtfsMatcher(url, templates)
-    matcher.match(input, output, mqtt)
+    matcher.match(input, output, mqtt, expiration)
 
 if __name__ == '__main__':
     cli()

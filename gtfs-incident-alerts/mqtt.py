@@ -13,7 +13,9 @@ from .__version__ import __version__
 
 class GtfsRealtimeServiceAlertPublisher:
 
-    def __init__(self, host, port, username, password, topic):
+    def __init__(self, host, port, username, password, topic, expiration):
+
+        self._expiration = expiration
 
         # connecto to MQTT broker as defined in config
         topic = topic.replace('+', '_')
@@ -123,6 +125,6 @@ class GtfsRealtimeServiceAlertPublisher:
         ParseDict(feed_message, pbf_object)
 
         properties = Properties(PacketTypes.PUBLISH)
-        properties.MessageExpiryInterval = 300
+        properties.MessageExpiryInterval = self._expiration
 
         self._mqtt.publish(topic, pbf_object.SerializeToString(), 0, True, properties) 
