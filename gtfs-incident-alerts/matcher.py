@@ -68,6 +68,10 @@ class OtpGtfsMatcher:
                             alert_id, alert_entity = self._create_service_alert(template, incident, **template_data)
                             alerts[alert_id] = alert_entity
 
+                            # log incident for debugging purposes
+                            logging.info('Alert ID: ' + alert_id)
+                            logging.info('Alert Data: ' + str(alert_entity))
+
                             # first template has matched
                             # do not create multiple alerts
                             # for the same incident
