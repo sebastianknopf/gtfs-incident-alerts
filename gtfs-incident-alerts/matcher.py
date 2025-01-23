@@ -1,6 +1,7 @@
 import json
 import logging
 import polyline
+import os
 import re
 import time
 import uuid
@@ -30,8 +31,12 @@ class OtpGtfsMatcher:
     def match(self, input_filename, output_filename, mqtt_uri, mqtt_expiration):
         
         # load incident input GeoJSON file
-        with open(input_filename, 'r') as geojson_file:
-            geojson = json.loads(geojson_file.read())
+        # if it is no file, use the input as GeoJSON directly
+        if isinstance(input_filename, str) and os.path.isfile(input_filename):
+            with open(input_filename, 'r') as geojson_file:
+                geojson = json.loads(geojson_file.read())
+        else:
+            geojson = input_filename
 
         # load active patterns for the current operation day
         otp_patterns = self._otp_client.load_active_pattern(
@@ -93,6 +98,7 @@ class OtpGtfsMatcher:
             with GtfsRealtimeServiceAlertPublisher(host=mqtt_host, port=mqtt_port, username=mqtt_username, password=mqtt_password, topic=mqtt_topic, expiration=mqtt_expiration) as mqtt_publisher:
                 mqtt_publisher.publish(alerts)
 
+            logging.info("MQTT publishing done")
         else:
             logging.info("writing output file ...")
 
@@ -122,6 +128,8 @@ class OtpGtfsMatcher:
                     ParseDict(feed_message, pbf_object)
 
                     output_file.write(pbf_object.SerializeToString())
+
+            logging.info("output file created")
 
     def _any_template_available(self, incident: dict) -> bool:
         if incident['properties']['events'] is None:

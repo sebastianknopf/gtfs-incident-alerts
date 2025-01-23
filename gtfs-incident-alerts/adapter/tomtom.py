@@ -38,7 +38,7 @@ class Adapter:
 
         self._api_key = key
 
-    def fetch(self, bbox, output_filename):
+    def fetch(self, bbox, output_filename=None) -> dict | None:
 
         request_fields = self._api_query.replace('\n', ' ').replace('\r', '').replace('\t', '').replace(' ', '')
         request_url = f"https://api.tomtom.com/traffic/services/{self._api_version}/incidentDetails?key={self._api_key}&bbox={bbox}&language={self._api_lang}&fields={request_fields}&categoryFilter={self._api_categories}"
@@ -53,9 +53,15 @@ class Adapter:
             json_response['features'] = json_response['incidents']
             del json_response['incidents']
 
-            with open(output_filename, 'w', encoding='utf-8') as output_file:
-                output_file.write(json.dumps(json_response))
+            if output_filename is not None:
+                with open(output_filename, 'w', encoding='utf-8') as output_file:
+                    output_file.write(json.dumps(json_response))
+            else:
+                return json_response
         
         else:
             logging.error(f"TomTom API response status code {response.status_code}")
             logging.info(response.text)
+
+            if output_filename is None:
+                return None
