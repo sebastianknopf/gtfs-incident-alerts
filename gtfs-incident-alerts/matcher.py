@@ -43,6 +43,10 @@ class OtpGtfsMatcher:
             datetime.now().strftime('%Y-%m-%d')
         )
 
+        # debugging output
+        logging.info(f"found {len(geojson['features'])} raw incidents total")
+        logging.info(f"found {len(otp_patterns)} trip patterns total")
+
         # iterate through all incidents found
         alerts = dict()
         for incident in geojson['features']:
@@ -79,7 +83,7 @@ class OtpGtfsMatcher:
                             break
 
         # create desired output
-        logging.info(f"found {len(alerts)} incidents total")
+        logging.info(f"found {len(alerts)} matching incidents total")
         if mqtt_uri is not None:
             logging.info("publishing to MQTT ...")
 
