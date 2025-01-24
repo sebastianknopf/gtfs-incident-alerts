@@ -91,8 +91,12 @@ class GtfsRealtimeServiceAlertPublisher:
     def _publish(self, alert_id: str, alert_entity: dict, is_deleted: bool = False) -> None:
 
         # generate MQTT topic from placeholders
+        # remove leading / if present, see #6 for reference
         topic = self._topic
         topic = topic.replace('[alertId]', alert_id)
+
+        if topic.startswith('/'):
+            topic = topic[1:]
 
         # generate feed message containing a single alert
         feed_message = dict()
