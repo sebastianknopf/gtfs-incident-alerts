@@ -63,13 +63,15 @@ def match(url, geojson, templates, output, mqtt, expiration):
 @click.option('--url', '-u', default='', help='OpenTripPlanner GraphQL GTFS endpoint for requesting GTFS data')
 @click.option('--templates', '-t', default='templates.yaml', help='YAML file containing text templates and their rules')
 @click.option('--output', '-o', help='Output protobuf or JSON file for generated service alerts')
-def simulation(geojson, url, templates, output):
+@click.option('--mqtt', '-m', default=None, help='MQTT connection and topic URI')
+@click.option('--expiration', '-e', default=600, help='MQTT message expiration time. Only used in MQTT publishing')
+def simulation(geojson, url, templates, output, mqtt, expiration):
     
     with open(geojson, 'r', encoding='utf-8') as geojson_file:
         geojson_data = json.loads(geojson_file.read())
     
     matcher = OtpGtfsMatcher(url, templates)
-    matcher.match(geojson_data, output, None, 0)
+    matcher.match(geojson_data, output, mqtt, expiration)
 
 @cli.command()
 @click.option('--source', '-s', default='tomtom', help='Datasource type for generating GeoJSON file')
