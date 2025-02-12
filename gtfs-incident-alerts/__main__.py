@@ -1,4 +1,5 @@
 import click
+import json
 import logging
 
 from .adapter import tomtom
@@ -56,6 +57,19 @@ def match(url, geojson, templates, output, mqtt, expiration):
 
     matcher = OtpGtfsMatcher(url, templates)
     matcher.match(geojson, output, mqtt, expiration)
+
+@cli.command()
+@click.option('--geojson', '-g', help='GeoJSON datasource with incident data')
+@click.option('--url', '-u', default='', help='OpenTripPlanner GraphQL GTFS endpoint for requesting GTFS data')
+@click.option('--templates', '-t', default='templates.yaml', help='YAML file containing text templates and their rules')
+@click.option('--output', '-o', help='Output protobuf or JSON file for generated service alerts')
+def simulation(geojson, url, templates, output):
+    
+    with open(geojson, 'r', encoding='utf-8') as geojson_file:
+        geojson_data = json.loads(geojson_file.read())
+    
+    matcher = OtpGtfsMatcher(url, templates)
+    matcher.match(geojson_data, output, None, 0)
 
 @cli.command()
 @click.option('--source', '-s', default='tomtom', help='Datasource type for generating GeoJSON file')
