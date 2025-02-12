@@ -6,7 +6,9 @@ templates:
           - 202
           - 203
           - 204
-        delay: 300
+          - 858
+          - 391
+          - 344
     cause: ACCIDENT
     effect: SIGNIFICANT_DELAYS
     url:
@@ -27,6 +29,30 @@ templates:
         und ${affectedLines[-1]['shortName']}. 
         % endif
         Es kann zu Verspätungen und einzelnen Fahrtausfällen kommen.
+  - name: 'roadworks-template'
+    conditions:
+      - code: 701
+        delay: 450
+    cause: MAINTENANCE
+    effect: SIGNIFICANT_DELAYS
+    url:
+      de: https://example.dev/alert/de/${id}
+    header:
+      de: |
+        Straßenarbeiten zwischen ${startLocationName} und ${endLocationName}
+    description:
+      de: |
+        Straßenarbeiten zwischen ${startLocationName} und ${endLocationName}. 
+        % if len(affectedLines) == 1:
+        Betroffen ist die Linie ${affectedLines[0]['shortName']}. 
+        % else:
+        Betroffen sind die Linien 
+        % for l in affectedLines[:-1]:
+        ${l['shortName']}${' ' if loop.last else ', '}
+        % endfor
+        und ${affectedLines[-1]['shortName']}. 
+        % endif
+        Es kann zu Verspätungen kommen.
   - name: 'demonstration-template'
     conditions:
       - code: 1513
@@ -35,7 +61,7 @@ templates:
           - 1568
           - 1569
           - 1570
-        delay: 300
+        delay: 450
     cause: DEMONSTRATION
     effect: SIGNIFICANT_DELAYS
     url:
@@ -61,7 +87,7 @@ templates:
       - code: 905
         or:
           - 906
-        delay: 300
+        delay: 450
     cause: WEATHER
     effect: SIGNIFICANT_DELAYS
     url:
@@ -111,7 +137,7 @@ templates:
           - 136
           - 142
           - 143
-        delay: 300
+        delay: 450
     cause: OTHER_CAUSE
     effect: SIGNIFICANT_DELAYS
     url:
