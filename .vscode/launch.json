@@ -9,7 +9,14 @@
             "type": "debugpy",
             "request": "launch",
             "module": "gtfs-incident-alerts",
-            "args": ["match", "-u", "https://otp.svprod01.app/otp/gtfs/v1",  "-i", "./incidents.geojson",  "-o",  "./service-alerts.json", "-c", "./sampledata/config.yaml"]
+            "args": ["match", "-u", "https://otp.svprod01.app/otp/gtfs/v1",  "-i", "./incidents.geojson",  "-o",  "./service-alerts.json"]
+        },
+        {
+            "name": "simulation (debug)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "gtfs-incident-alerts",
+            "args": ["simulation", "-u", "https://otp.svprod01.app/otp/gtfs/v1",  "-g", "./incidents.geojson",  "-o",  "./service-alerts.json"]
         }
     ]
 }
