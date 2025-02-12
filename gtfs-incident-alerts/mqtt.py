@@ -9,7 +9,8 @@ from google.protobuf.json_format import ParseDict
 from paho.mqtt import client
 from paho.mqtt.packettypes import PacketTypes
 from paho.mqtt.properties import Properties
-from .__version__ import __version__
+
+from .version import version
 
 class GtfsRealtimeServiceAlertPublisher:
 
@@ -41,7 +42,7 @@ class GtfsRealtimeServiceAlertPublisher:
         self._mqtt.disconnect()
 
     def publish(self, alerts: dict) -> None:
-        mqtt_mirror_dir = site_data_dir(appname='gtfs-incident-alerts', appauthor='skc', version=__version__)
+        mqtt_mirror_dir = site_data_dir(appname='gtfs-incident-alerts', appauthor='skc', version=version)
         if not os.path.exists(mqtt_mirror_dir):
             os.makedirs(mqtt_mirror_dir)
             

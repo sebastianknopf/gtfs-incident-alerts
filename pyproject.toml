@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gtfs-incident-alerts"
+description = "Python utility for matching incident data agains GTFS shapes and generating GTFS-RT service alerts."
+authors = [{ name = "Sebastian Knopf", email = "mail@sebastian-knopf.de" }]
+readme = "README.md"
+license = {text = "Apache License (2.0)"}
+dependencies = [
+    "appdirs",
+    "click",
+    "gql[httpx]",
+    "gtfs-realtime-bindings",
+    "mako",
+    "paho-mqtt",
+    "polyline",
+    "pyproj",
+    "pyyaml",
+    "requests",
+    "shapely"
+]
+requires-python = ">=3.10"
+
+dynamic = ["version"]
+
+[tool.setuptools]
+packages = ["gtfs-incident-alerts"]
+
+[tool.setuptools.package-dir]
+stopmonitor = "gtfs-incident-alerts"
+
+[tool.setuptools_scm]
+write_to = "gtfs-incident-alerts/version.py"
