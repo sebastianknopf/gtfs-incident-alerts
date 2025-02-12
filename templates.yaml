@@ -44,15 +44,15 @@ templates:
       de: |
         Straßenarbeiten zwischen ${startLocationName} und ${endLocationName}. 
         % if len(affectedLines) == 1:
-        Betroffen ist die Linie ${affectedLines[0]['shortName']}. 
+        Auf der Linie ${affectedLines[0]['shortName']} 
         % else:
-        Betroffen sind die Linien 
+        Auf den Linien 
         % for l in affectedLines[:-1]:
         ${l['shortName']}${' ' if loop.last else ', '}
         % endfor
         und ${affectedLines[-1]['shortName']}. 
         % endif
-        Es kann zu Verspätungen kommen.
+        kann es zu Verspätungen kommen.
   - name: 'demonstration-template'
     conditions:
       - code: 1513
