@@ -108,6 +108,40 @@ templates:
         und ${affectedLines[-1]['shortName']}. 
         % endif
         Es kann zu erheblichen Verspätungen und einzelnen Fahrtausfällen kommen.
+  - name: 'snow-sleet-template'
+    conditions:
+      - code: 975
+        or:
+          - 996
+          - 997
+          - 1101
+          - 1102
+          - 1103
+          - 1104
+          - 1105
+          - 1106
+          - 1107
+        delay: 200
+    cause: WEATHER
+    effect: SIGNIFICANT_DELAYS
+    url:
+      de: https://example.dev/alert/de/${id}
+    header:
+      de: |
+        Beeinträchtigungen durch Schnee- und Eisglätte zwischen ${startLocationName} und ${endLocationName}
+    description:
+      de: |
+        Schnee- und Eisglätte beeinträchtigen den Verkehr zwischen ${startLocationName} und ${endLocationName}. 
+        % if len(affectedLines) == 1:
+        Betroffen ist die Linie ${affectedLines[0]['shortName']}. 
+        % else:
+        Betroffen sind die Linien 
+        % for l in affectedLines[:-1]:
+        ${l['shortName']}${' ' if loop.last else ', '}
+        % endfor
+        und ${affectedLines[-1]['shortName']}. 
+        % endif
+        Es kann zu erheblichen Verspätungen und einzelnen Fahrtausfällen kommen. Bitte prüfen Sie Ihre Verbindung vor Abfahrt in der elektronischen Fahrplanauskunft.
   - name: 'heavier-traffic-template'
     conditions:
       - code: 101
